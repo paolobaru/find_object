@@ -29,9 +29,9 @@ img_width, img_height = 128, 128
 train_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
         rescale=1./255,  
         validation_split=0.2,   
-        shear_range=0.10,
-        zoom_range=0.1,
-        brightness_range=(0.5, 1.0),
+        shear_range=0.15,
+        zoom_range=0.15,
+        brightness_range=(0.4, 1.0),
         width_shift_range=0.25,
         height_shift_range=0.25,
         horizontal_flip=True
@@ -86,7 +86,7 @@ model.compile(optimizer='adam',
 #%%
 
 model.fit(train_generator, 
-        epochs=50,
+        epochs=75,
         validation_data=validation_generator,
         verbose =1)
         #validation_data=validation_generator,
