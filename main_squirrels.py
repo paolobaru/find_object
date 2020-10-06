@@ -57,6 +57,9 @@ validation_generator = train_datagen.flow_from_directory(
 from keras import backend as K 
 
 
+label_map = (train_generator.class_indices)
+index_to_label = dict(zip(label_map.values(), label_map.keys()))
+
 # if K.image_data_format() == 'channels_first': 
 #     input_shape = (1, img_width, img_height) 
 # else: 
@@ -72,7 +75,8 @@ model = keras.Sequential([
   keras.layers.MaxPooling2D(),
   keras.layers.Flatten(),
   keras.layers.Dense(128, activation='relu'),
-  keras.layers.Dense(3) #number of classes
+  keras.layers.Dense(3), #number of classes  
+  keras.layers.Softmax()
 ])
 model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -93,6 +97,7 @@ model.fit(train_generator,
 model.save("squirrel_model")
 
 #%%
+
 test_datagen = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
 
 # validation_generator = test_datagen.flow_from_directory(
@@ -105,3 +110,6 @@ test_datagen = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
 test_loss, test_acc = model.evaluate(validation_generator , verbose=2)
 
 print('\nTest accuracy:', test_acc)
+
+#%%
+
