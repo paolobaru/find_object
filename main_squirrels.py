@@ -8,13 +8,93 @@ Created on Thu Oct  1 21:24:37 2020
 # TensorFlow and tf.keras
 import tensorflow as tf
 from tensorflow import keras
+import os
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing import image
+
 
 # Helper libraries
 import numpy as np
 import matplotlib.pyplot as plt
 
+import json
+
 print(tf.__version__)
 
+batch_size = 30
+data_classes = ('squirrels','racoon','hedgehog')
+
+def generators(shape, preprocessing): 
+    '''Create the training and validation datasets for 
+    a given image shape.
+    '''
+    imgdatagen = ImageDataGenerator(
+        preprocessing_function = preprocessing,
+        horizontal_flip = True, 
+        validation_split = 0.1,
+    )
+
+    height, width = shape
+
+    train_dataset = imgdatagen.flow_from_directory(
+        './dataset/train',
+        target_size = (height, width), 
+        classes = ('squirrels','racoon','hedgehog'),
+        batch_size = batch_size,
+        subset = 'training', 
+    )
+
+    val_dataset = imgdatagen.flow_from_directory(
+        './dataset/train',
+        target_size = (height, width), 
+        classes = ('squirrels','racoon','hedgehog'),
+        batch_size = batch_size,
+        subset = 'validation'
+    )
+    return train_dataset, val_dataset
+
+def plot_history(history, yrange):
+    '''Plot loss and accuracy as a function of the epoch,
+    for the training and validation datasets.
+    '''
+    acc = history.history['acc']
+    val_acc = history.history['val_acc']
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+
+    # Get number of epochs
+    epochs = range(len(acc))
+
+    # Plot training and validation accuracy per epoch
+    plt.plot(epochs, acc)
+    plt.plot(epochs, val_acc)
+    plt.title('Training and validation accuracy')
+    plt.ylim(yrange)
+    
+    # Plot training and validation loss per epoch
+    plt.figure()
+
+    plt.plot(epochs, loss)
+    plt.plot(epochs, val_loss)
+    plt.title('Training and validation loss')
+    
+    plt.show()
+    
+def predict_image_from_path_vgg16 ( img_path ):
+    img = image.load_img(img_path, target_size=(224,224))
+    x = image.img_to_array(img)
+    x = np.expand_dims(x, axis=0)
+    x = keras.applications.vgg16.preprocess_input(x)
+    found_label_index = [(x[0]) for x in np.argwhere(full_model.predict(x)[0] > 0.85)]
+    print ( img_path + " ")
+    # prediction = full_model.predict(x)
+    found_labels = []
+    for lb_i in found_label_index:
+        found_labels.append( data_classes[lb_i] )
+        print (found_labels[-1])
+    # print()    
+    plt.imshow(img)
+    return 
 #%%
 
 #train_ds = tf.keras.preprocessing.image_dataset_from_directory(
@@ -84,7 +164,51 @@ model.compile(optimizer='adam',
 
 
 #%%
+vgg16 = keras.applications.vgg16
 
+
+conv_model = vgg16.VGG16(weights='imagenet', include_top=False, input_shape=(224,224,3))
+
+# conv_model.summary()
+
+# flatten the output of the convolutional part: 
+x = keras.layers.Flatten()(conv_model.output)
+# three hidden layers
+x = keras.layers.Dense(100, activation='relu')(x)
+x = keras.layers.Dense(100, activation='relu')(x)
+x = keras.layers.Dense(100, activation='relu')(x)
+# final softmax layer with 3 categories (dog and cat)
+predictions = keras.layers.Dense(3, activation='softmax')(x)
+
+# creating the full model:
+full_model = keras.models.Model(inputs=conv_model.input, outputs=predictions)
+
+for layer in conv_model.layers:
+    layer.trainable = False
+    
+full_model.summary()
+
+full_model.compile(loss='binary_crossentropy',
+                  optimizer=keras.optimizers.Adamax(lr=0.001),
+                  metrics=['acc'])
+#%%
+
+train_dataset, val_dataset = generators((224,224), preprocessing=vgg16.preprocess_input)
+history = full_model.fit_generator(
+    train_dataset, 
+    validation_data = val_dataset,
+    workers=10,
+    epochs=5,
+)
+#%%
+full_model.save("squirrel_model_vgg16")
+#%%
+
+predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/squirrels/squirrels1.jpg' )
+predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/racoon/racoon1.jpg' )
+predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/hedgehog/hedgehog1.jpg' )
+
+#%%
 model.fit(train_generator, 
         epochs=75,
         validation_data=validation_generator,
@@ -94,7 +218,6 @@ model.fit(train_generator,
         
 #%%
 
-model.save("squirrel_model")
 
 #%%
 
@@ -113,3 +236,8 @@ print('\nTest accuracy:', test_acc)
 
 #%%
 
+label_to_index = train_generator.class_indices
+index_to_label = inv_map = {v: k for k, v in label_to_index.items()}
+
+with open('squirrel_model_labels.json', 'w') as outfile:
+    json.dump(train_generator.class_indices, outfile)
