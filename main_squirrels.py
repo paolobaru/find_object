@@ -22,7 +22,7 @@ import json
 print(tf.__version__)
 
 batch_size = 30
-data_classes = ('squirrels','racoon','hedgehog')
+data_classes = ('squirrels','racoon','hedgehog','cat')
 
 def generators(shape, preprocessing): 
     '''Create the training and validation datasets for 
@@ -39,7 +39,7 @@ def generators(shape, preprocessing):
     train_dataset = imgdatagen.flow_from_directory(
         './dataset/train',
         target_size = (height, width), 
-        classes = ('squirrels','racoon','hedgehog'),
+        classes = data_classes,
         batch_size = batch_size,
         subset = 'training', 
     )
@@ -47,7 +47,7 @@ def generators(shape, preprocessing):
     val_dataset = imgdatagen.flow_from_directory(
         './dataset/train',
         target_size = (height, width), 
-        classes = ('squirrels','racoon','hedgehog'),
+        classes = data_classes,
         batch_size = batch_size,
         subset = 'validation'
     )
@@ -97,70 +97,70 @@ def predict_image_from_path_vgg16 ( img_path , mute=False ):
     return found_labels
 #%%
 
-#train_ds = tf.keras.preprocessing.image_dataset_from_directory(
-#      '/tf/tensorflow_squirrels/data',
-#    labels='inferred', 
-#    label_mode = 'int',
-#    image_size = (64,64),
-#      color_mode="grayscale")
+# #train_ds = tf.keras.preprocessing.image_dataset_from_directory(
+# #      '/tf/tensorflow_squirrels/data',
+# #    labels='inferred', 
+# #    label_mode = 'int',
+# #    image_size = (64,64),
+# #      color_mode="grayscale")
 
-img_width, img_height = 128, 128
+# img_width, img_height = 128, 128
 
-train_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
-        rescale=1./255,  
-        validation_split=0.2,   
-        shear_range=0.15,
-        zoom_range=0.15,
-        brightness_range=(0.4, 1.0),
-        width_shift_range=0.25,
-        height_shift_range=0.25,
-        horizontal_flip=True
-        )
-train_generator = train_datagen.flow_from_directory(
-        './dataset/train',
-        target_size=(img_width, img_height),
-        subset="training",
-        # color_mode="grayscale",
-        batch_size=32, 
-        class_mode="sparse" 
-        )
-        # )
-validation_generator = train_datagen.flow_from_directory(
-        './dataset/train',
-        target_size=(img_width, img_height),
-        subset="validation",
-        # color_mode="grayscale",
-        batch_size=32, 
-        class_mode="sparse" 
-        )
+# train_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
+#         rescale=1./255,  
+#         validation_split=0.2,   
+#         shear_range=0.15,
+#         zoom_range=0.15,
+#         brightness_range=(0.4, 1.0),
+#         width_shift_range=0.25,
+#         height_shift_range=0.25,
+#         horizontal_flip=True
+#         )
+# train_generator = train_datagen.flow_from_directory(
+#         './dataset/train',
+#         target_size=(img_width, img_height),
+#         subset="training",
+#         # color_mode="grayscale",
+#         batch_size=32, 
+#         class_mode="sparse" 
+#         )
+#         # )
+# validation_generator = train_datagen.flow_from_directory(
+#         './dataset/train',
+#         target_size=(img_width, img_height),
+#         subset="validation",
+#         # color_mode="grayscale",
+#         batch_size=32, 
+#         class_mode="sparse" 
+#         )
 
-from keras import backend as K 
+# from keras import backend as K 
 
 
-label_map = (train_generator.class_indices)
-index_to_label = dict(zip(label_map.values(), label_map.keys()))
+# label_map = (train_generator.class_indices)
+# index_to_label = dict(zip(label_map.values(), label_map.keys()))
 
-# if K.image_data_format() == 'channels_first': 
-#     input_shape = (1, img_width, img_height) 
-# else: 
-input_shape = (img_width, img_height, 3)
-#%%
+# # if K.image_data_format() == 'channels_first': 
+# #     input_shape = (1, img_width, img_height) 
+# # else: 
+# input_shape = (img_width, img_height, 3)
+# #%%
 
-model = keras.Sequential([
-  keras.layers.Conv2D(16, 3, padding='same', activation='relu',input_shape = input_shape),
-  keras.layers.MaxPooling2D(),
-  keras.layers.Conv2D(32, 3, padding='same', activation='relu'),
-  keras.layers.MaxPooling2D(),
-  keras.layers.Conv2D(64, 3, padding='same', activation='relu'),
-  keras.layers.MaxPooling2D(),
-  keras.layers.Flatten(),
-  keras.layers.Dense(128, activation='relu'),
-  keras.layers.Dense(3), #number of classes  
-  keras.layers.Softmax()
-])
-model.compile(optimizer='adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
+# model = keras.Sequential([
+#   keras.layers.Conv2D(16, 3, padding='same', activation='relu',input_shape = input_shape),
+#   keras.layers.MaxPooling2D(),
+#   keras.layers.Conv2D(32, 3, padding='same', activation='relu'),
+#   keras.layers.MaxPooling2D(),
+#   keras.layers.Conv2D(64, 3, padding='same', activation='relu'),
+#   keras.layers.MaxPooling2D(),
+#   keras.layers.Flatten(),
+#   keras.layers.Dense(128, activation='relu'),
+#   keras.layers.Dense(3), #number of classes  
+#   keras.layers.Softmax()
+# ])
+# model.compile(optimizer='adam',
+#               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+#               metrics=['accuracy'])
 
 
 #%%
@@ -178,7 +178,7 @@ x = keras.layers.Dense(100, activation='relu')(x)
 x = keras.layers.Dense(100, activation='relu')(x)
 x = keras.layers.Dense(100, activation='relu')(x)
 # final softmax layer with 3 categories (dog and cat)
-predictions = keras.layers.Dense(3, activation='softmax')(x)
+predictions = keras.layers.Dense(len(data_classes), activation='softmax')(x)
 
 # creating the full model:
 full_model = keras.models.Model(inputs=conv_model.input, outputs=predictions)
@@ -198,16 +198,18 @@ history = full_model.fit_generator(
     train_dataset, 
     validation_data = val_dataset,
     workers=10,
-    epochs=5,
+    epochs=10,
 )
 #%%
-full_model.save("squirrel_model_vgg16")
+full_model.save("srhc_model_vgg16")
 #%%
+full_model=keras.models.load_model("srhc_model_vgg16")
 
 # predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/squirrels/squirrels1.jpg' )
 class_info = [ { "label" : "squirrels", "folder" : "C:/Repositories/find_object/dataset/train/squirrels/"} ,
          { "label" : "racoon", "folder"  : "C:/Repositories/find_object/dataset/train/racoon/"},
          { "label" : "hedgehog", "folder"  : "C:/Repositories/find_object/dataset/train/hedgehog/"},
+         { "label" : "cat", "folder"  : "C:/Repositories/find_object/dataset/train/cat/"},
         ]
 for this_class in class_info:
     
@@ -224,6 +226,8 @@ for this_class in class_info:
                 # plt.imshow(img)
                 plt.figure()
                 plt.imshow(plt.imread(dirpath + entry.name))
+                plt.text(0.5, 0.5, " misclassfied as " + str(labels), horizontalalignment='center', verticalalignment='center')
+                    
                 wrong += 1
             else:
                 correct += 1
@@ -231,42 +235,42 @@ for this_class in class_info:
         
         
         
-#%%        
-predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/racoon/racoon1.jpg' )
-predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/hedgehog/hedgehog1.jpg' )
+# #%%        
+# predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/racoon/racoon1.jpg' )
+# predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/hedgehog/hedgehog1.jpg' )
 
 
 
-#%%
-model.fit(train_generator, 
-        epochs=75,
-        validation_data=validation_generator,
-        verbose =1)
-        #validation_data=validation_generator,
-        #validation_steps = 4)
+# #%%
+# model.fit(train_generator, 
+#         epochs=75,
+#         validation_data=validation_generator,
+#         verbose =1)
+#         #validation_data=validation_generator,
+#         #validation_steps = 4)
         
-#%%
+# #%%
 
 
-#%%
+# #%%
 
-test_datagen = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
+# test_datagen = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
 
-# validation_generator = test_datagen.flow_from_directory(
-#         './dataset/train',
-#         color_mode="grayscale",
-#         target_size=(64,64),
-#         batch_size=4,
-#         class_mode='sparse')
+# # validation_generator = test_datagen.flow_from_directory(
+# #         './dataset/train',
+# #         color_mode="grayscale",
+# #         target_size=(64,64),
+# #         batch_size=4,
+# #         class_mode='sparse')
 
-test_loss, test_acc = model.evaluate(validation_generator , verbose=2)
+# test_loss, test_acc = model.evaluate(validation_generator , verbose=2)
 
-print('\nTest accuracy:', test_acc)
+# print('\nTest accuracy:', test_acc)
 
-#%%
+# #%%
 
-label_to_index = train_generator.class_indices
-index_to_label = inv_map = {v: k for k, v in label_to_index.items()}
+# label_to_index = train_generator.class_indices
+# index_to_label = inv_map = {v: k for k, v in label_to_index.items()}
 
-with open('squirrel_model_labels.json', 'w') as outfile:
-    json.dump(train_generator.class_indices, outfile)
+# with open('squirrel_model_labels.json', 'w') as outfile:
+#     json.dump(train_generator.class_indices, outfile)
