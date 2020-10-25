@@ -80,21 +80,21 @@ def plot_history(history, yrange):
     
     plt.show()
     
-def predict_image_from_path_vgg16 ( img_path ):
+def predict_image_from_path_vgg16 ( img_path , mute=False ):
     img = image.load_img(img_path, target_size=(224,224))
     x = image.img_to_array(img)
     x = np.expand_dims(x, axis=0)
     x = keras.applications.vgg16.preprocess_input(x)
-    found_label_index = [(x[0]) for x in np.argwhere(full_model.predict(x)[0] > 0.85)]
-    print ( img_path + " ")
+    found_label_index = [(x[0]) for x in np.argwhere(full_model.predict(x)[0] > 0.60)]
+    if not mute: print ( img_path + " ")
     # prediction = full_model.predict(x)
     found_labels = []
     for lb_i in found_label_index:
         found_labels.append( data_classes[lb_i] )
-        print (found_labels[-1])
+        if not mute: print (found_labels[-1])
     # print()    
-    plt.imshow(img)
-    return 
+    if not mute: plt.imshow(img)
+    return found_labels
 #%%
 
 #train_ds = tf.keras.preprocessing.image_dataset_from_directory(
@@ -204,9 +204,38 @@ history = full_model.fit_generator(
 full_model.save("squirrel_model_vgg16")
 #%%
 
-predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/squirrels/squirrels1.jpg' )
+# predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/squirrels/squirrels1.jpg' )
+class_info = [ { "label" : "squirrels", "folder" : "C:/Repositories/find_object/dataset/train/squirrels/"} ,
+         { "label" : "racoon", "folder"  : "C:/Repositories/find_object/dataset/train/racoon/"},
+         { "label" : "hedgehog", "folder"  : "C:/Repositories/find_object/dataset/train/hedgehog/"},
+        ]
+for this_class in class_info:
+    
+    ( correct , wrong) = (0,0)
+    # dirpath = 'C:/Repositories/find_object/dataset/train/squirrels/'
+    dirpath = this_class["folder"]
+    for entry in os.scandir(dirpath):
+        if (entry.path.endswith(".jpg")  and entry.is_file()) :
+            labels = predict_image_from_path_vgg16 ( dirpath + entry.name , mute = True)
+            if this_class["label"] not in labels:
+                print ( dirpath + entry.name + " misclassfied as " + str(labels))            
+                # predict_image_from_path_vgg16 ( dirpath + entry.name , mute = False)
+                # img=image.load_img(dirpath + entry.name)
+                # plt.imshow(img)
+                plt.figure()
+                plt.imshow(plt.imread(dirpath + entry.name))
+                wrong += 1
+            else:
+                correct += 1
+    print( this_class["label"] + " has " + str(correct) + " correct detectio and " + str(wrong) + " wrong detection")
+        
+        
+        
+#%%        
 predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/racoon/racoon1.jpg' )
 predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/hedgehog/hedgehog1.jpg' )
+
+
 
 #%%
 model.fit(train_generator, 
