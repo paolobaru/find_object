@@ -22,7 +22,7 @@ import json
 print(tf.__version__)
 
 batch_size = 30
-data_classes = ('squirrels','racoon','hedgehog','cat')
+data_classes = ('squirrels','racoon','hedgehog','cat','skunk')
 
 def generators(shape, preprocessing): 
     '''Create the training and validation datasets for 
@@ -32,6 +32,11 @@ def generators(shape, preprocessing):
         preprocessing_function = preprocessing,
         horizontal_flip = True, 
         validation_split = 0.1,
+        shear_range=0.15,
+        zoom_range=0.15,
+        brightness_range=(0.4, 1.0),
+        width_shift_range=0.25,
+        height_shift_range=0.25,
     )
 
     height, width = shape
@@ -177,6 +182,7 @@ x = keras.layers.Flatten()(conv_model.output)
 x = keras.layers.Dense(100, activation='relu')(x)
 x = keras.layers.Dense(100, activation='relu')(x)
 x = keras.layers.Dense(100, activation='relu')(x)
+x = keras.layers.Dropout(0.5)(x)
 # final softmax layer with 3 categories (dog and cat)
 predictions = keras.layers.Dense(len(data_classes), activation='softmax')(x)
 
@@ -197,11 +203,12 @@ train_dataset, val_dataset = generators((224,224), preprocessing=vgg16.preproces
 history = full_model.fit_generator(
     train_dataset, 
     validation_data = val_dataset,
-    workers=10,
-    epochs=10,
+    workers=8,
+    epochs=18,
 )
+plot_history(history, yrange=(0.9,1))
 #%%
-full_model.save("srhc_model_vgg16")
+full_model.save("srhcs_model_vgg16")
 #%%
 full_model=keras.models.load_model("srhc_model_vgg16")
 
@@ -210,6 +217,7 @@ class_info = [ { "label" : "squirrels", "folder" : "C:/Repositories/find_object/
          { "label" : "racoon", "folder"  : "C:/Repositories/find_object/dataset/train/racoon/"},
          { "label" : "hedgehog", "folder"  : "C:/Repositories/find_object/dataset/train/hedgehog/"},
          { "label" : "cat", "folder"  : "C:/Repositories/find_object/dataset/train/cat/"},
+         { "label" : "skunk", "folder"  : "C:/Repositories/find_object/dataset/train/skunk/"},
         ]
 for this_class in class_info:
     
