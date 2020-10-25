@@ -210,7 +210,7 @@ plot_history(history, yrange=(0.9,1))
 #%%
 full_model.save("srhcs_model_vgg16")
 #%%
-full_model=keras.models.load_model("srhc_model_vgg16")
+full_model=keras.models.load_model("srhcs_model_vgg16")
 
 # predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/squirrels/squirrels1.jpg' )
 class_info = [ { "label" : "squirrels", "folder" : "C:/Repositories/find_object/dataset/train/squirrels/"} ,
