@@ -30,11 +30,12 @@ def generators(shape, preprocessing):
     '''
     imgdatagen = ImageDataGenerator(
         preprocessing_function = preprocessing,
+        rotation_range = 40, 
         horizontal_flip = True, 
         validation_split = 0.1,
         shear_range=0.15,
         zoom_range=0.15,
-        brightness_range=(0.4, 1.0),
+        brightness_range=(0.25, 1.5),
         width_shift_range=0.25,
         height_shift_range=0.25,
     )
@@ -182,7 +183,7 @@ x = keras.layers.Flatten()(conv_model.output)
 x = keras.layers.Dense(100, activation='relu')(x)
 x = keras.layers.Dense(100, activation='relu')(x)
 x = keras.layers.Dense(100, activation='relu')(x)
-x = keras.layers.Dropout(0.5)(x)
+x = keras.layers.Dropout(0.25)(x)
 # final softmax layer with 3 categories (dog and cat)
 predictions = keras.layers.Dense(len(data_classes), activation='softmax')(x)
 
@@ -204,7 +205,7 @@ history = full_model.fit_generator(
     train_dataset, 
     validation_data = val_dataset,
     workers=8,
-    epochs=12,
+    epochs=15,
 )
 plot_history(history, yrange=(0.9,1))
 #%%
@@ -226,6 +227,7 @@ for this_class in class_info:
     # dirpath = 'C:/Repositories/find_object/dataset/train/squirrels/'
     dirpath = this_class["folder"]
     for entry in os.scandir(dirpath):
+        
         if (entry.path.endswith(".jpg")  and entry.is_file()) :
             labels = predict_image_from_path_vgg16 ( dirpath + entry.name , mute = True)
             if this_class["label"] not in labels:
