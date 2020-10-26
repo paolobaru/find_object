@@ -204,7 +204,7 @@ history = full_model.fit_generator(
     train_dataset, 
     validation_data = val_dataset,
     workers=8,
-    epochs=18,
+    epochs=12,
 )
 plot_history(history, yrange=(0.9,1))
 #%%
@@ -212,6 +212,7 @@ full_model.save("srhcs_model_vgg16")
 #%%
 full_model=keras.models.load_model("srhcs_model_vgg16")
 
+#%%
 # predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/squirrels/squirrels1.jpg' )
 class_info = [ { "label" : "squirrels", "folder" : "C:/Repositories/find_object/dataset/train/squirrels/"} ,
          { "label" : "racoon", "folder"  : "C:/Repositories/find_object/dataset/train/racoon/"},
