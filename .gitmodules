@@ -1,0 +1,4 @@
+[submodule "dataset"]
+	path = dataset
+	url = https://github.com/paolobaru/detect_train_ds.git
+	branch = main
