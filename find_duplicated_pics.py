@@ -21,6 +21,7 @@ import warnings
 
 
 
+
 # def file_hash(filepath):
 #     with open(filepath, 'rb') as f:
 #         return md5(f.read()).hexdigest()
@@ -28,7 +29,7 @@ import warnings
 #%%
 hash_collection={}
 hashlist=[]
-for entry in os.scandir('C:/projects/find_object/dataset/train'):
+for entry in os.scandir(r'C:\projects\find_object\dataset\train'):
     if entry.is_dir() :
         print(entry.path)
         
@@ -43,10 +44,25 @@ for entry in os.scandir('C:/projects/find_object/dataset/train'):
                     # filehash = hashlib.md5(f.read()).hexdigest()
                 with warnings.catch_warnings(record=True) as w:
                     warnings.simplefilter("always", category=UserWarning)
-                    im = Image.open(filepath)
-                    filehash = imagehash.phash(im)
+                    try:
+                        im = Image.open(filepath)
+                    except OSError:
+                        print(filepath + " creating an error, removing")
+                        os.remove(filepath)
+                        continue
+                    try:
+                        filehash = imagehash.phash(im)
+                    except AttributeError:                        
+                        im.close()
+                        print(filepath + " creating an error, removing")
+                        os.remove(filepath)
+                        continue
                     im.close()
-                    if len(w) > 0: print(filepath + " creating a warning")
+                    if len(w) > 0: 
+                        print(filepath + " creating a warning, removing")
+                        print(w[-1].message)
+                        os.remove(filepath)
+                    
                         
                 
                 if filehash not in hash_keys: 
