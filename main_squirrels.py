@@ -30,11 +30,11 @@ def generators(shape, preprocessing):
     '''
     imgdatagen = ImageDataGenerator(
         preprocessing_function = preprocessing,
-        rotation_range = 40, 
+        rotation_range = 50, 
         horizontal_flip = True, 
         validation_split = 0.1,
-        shear_range=0.15,
-        zoom_range=0.15,
+        shear_range=0.25,
+        zoom_range=0.25,
         brightness_range=(0.25, 1.5),
         width_shift_range=0.25,
         height_shift_range=0.25,
