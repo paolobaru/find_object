@@ -43,7 +43,7 @@ def generators(shape, preprocessing):
     height, width = shape
 
     train_dataset = imgdatagen.flow_from_directory(
-        './dataset/train',
+        r'C:/projects/find_object/dataset/train',
         target_size = (height, width), 
         classes = data_classes,
         batch_size = batch_size,
@@ -51,7 +51,7 @@ def generators(shape, preprocessing):
     )
 
     val_dataset = imgdatagen.flow_from_directory(
-        './dataset/train',
+        r'C:/projects/find_object/dataset/train',
         target_size = (height, width), 
         classes = data_classes,
         batch_size = batch_size,
@@ -204,8 +204,8 @@ train_dataset, val_dataset = generators((224,224), preprocessing=vgg16.preproces
 history = full_model.fit_generator(
     train_dataset, 
     validation_data = val_dataset,
-    workers=8,
-    epochs=15,
+    workers=16,
+    epochs=24,
 )
 plot_history(history, yrange=(0.9,1))
 #%%
@@ -214,17 +214,17 @@ full_model.save("srhcs_model_vgg16")
 full_model=keras.models.load_model("srhcs_model_vgg16")
 
 #%%
-# predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/squirrels/squirrels1.jpg' )
-class_info = [ { "label" : "squirrels", "folder" : "C:/Repositories/find_object/dataset/train/squirrels/"} ,
-         { "label" : "racoon", "folder"  : "C:/Repositories/find_object/dataset/train/racoon/"},
-         { "label" : "hedgehog", "folder"  : "C:/Repositories/find_object/dataset/train/hedgehog/"},
-         { "label" : "cat", "folder"  : "C:/Repositories/find_object/dataset/train/cat/"},
-         { "label" : "skunk", "folder"  : "C:/Repositories/find_object/dataset/train/skunk/"},
+# predict_image_from_path_vgg16 ( 'C:/projects/find_object/dataset/train/squirrels/squirrels1.jpg' )
+class_info = [ { "label" : "squirrels", "folder" : "C:/projects/find_object/dataset/train/squirrels/"} ,
+         { "label" : "racoon", "folder"  : "C:/projects/find_object/dataset/train/racoon/"},
+         { "label" : "hedgehog", "folder"  : "C:/projects/find_object/dataset/train/hedgehog/"},
+         { "label" : "cat", "folder"  : "C:/projects/find_object/dataset/train/cat/"},
+         { "label" : "skunk", "folder"  : "C:/projects/find_object/dataset/train/skunk/"},
         ]
 for this_class in class_info:
     
     ( correct , wrong) = (0,0)
-    # dirpath = 'C:/Repositories/find_object/dataset/train/squirrels/'
+    # dirpath = 'C:/projects/find_object/dataset/train/squirrels/'
     dirpath = this_class["folder"]
     for entry in os.scandir(dirpath):
         
@@ -247,8 +247,8 @@ for this_class in class_info:
         
         
 # #%%        
-# predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/racoon/racoon1.jpg' )
-# predict_image_from_path_vgg16 ( 'C:/Repositories/find_object/dataset/train/hedgehog/hedgehog1.jpg' )
+# predict_image_from_path_vgg16 ( 'C:/projects/find_object/dataset/train/racoon/racoon1.jpg' )
+# predict_image_from_path_vgg16 ( 'C:/projects/find_object/dataset/train/hedgehog/hedgehog1.jpg' )
 
 
 
