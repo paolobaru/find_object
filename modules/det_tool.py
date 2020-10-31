@@ -20,7 +20,7 @@ def get_main_box ( prob_map, threshold = 0.10 ):
     
     return xx_min , yy_min, xx_max , yy_max
 
-def map_results (boxes, proba, image):
+def map_results (boxes, proba, image, threshold = 0.10):
     y, x, z = image[:,:].shape
     #init probs map
     prob_map = np.zeros((x, y), dtype=np.float)
@@ -32,7 +32,7 @@ def map_results (boxes, proba, image):
     
     # cv2.imshow("prob maps", prob_map.transpsoe())
     
-    xx_min , yy_min, xx_max , yy_max = get_main_box(prob_map, threshold = 0.02)
+    xx_min , yy_min, xx_max , yy_max = get_main_box(prob_map, threshold = threshold)
 
     
     return xx_min , yy_min, xx_max , yy_max

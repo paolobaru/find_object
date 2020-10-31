@@ -148,7 +148,7 @@ rois = np.array(rois, dtype="float32")
 # long the classifications took
 print("[INFO] classifying ROIs...")
 start = time.time()
-preds = model.predict(rois)
+preds = model.predict(rois, use_multiprocessing=True, workers = 16)
 end = time.time()
 print("[INFO] classifying ROIs took {:.5f} seconds".format(
     end - start))
@@ -203,12 +203,13 @@ for label in labels.keys():
     boxes = np.array([p[0] for p in labels[label]])
     proba = np.array([p[1] for p in labels[label]])
     
-    xx_min , yy_min, xx_max , yy_max =  map_results (boxes, proba,clone)
+    xx_min , yy_min, xx_max , yy_max =  map_results (boxes, proba,clone, threshold = 0.10)
     
     boxes = non_max_suppression(boxes, proba, overlapThresh=0.15)
     # loop over all bounding boxes that were kept after applying
     # non-maxima suppression
-    boxes = [(startX, startY, endX, endY)]
+    # boxes = [(startX, startY, endX, endY)]
+    boxes = [(xx_min, yy_min, xx_max, yy_max)]
     for (startX, startY, endX, endY) in boxes:
         # draw the bounding box and label on the image
         cv2.rectangle(clone, (startX, startY), (endX, endY),
