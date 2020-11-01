@@ -88,7 +88,6 @@ model = keras.models.load_model("srhcs_model_vgg16",    )
 # load the input image from disk, resize it such that it has the
 # has the supplied width, and then grab its dimensions
 
-raw_det_all_files = []
 pyramid_all_files = []
 if 'pyramid_queue' in locals() :del locals()['pyramid_queue']
 print ("Starting Raw Detection with pyramid", end="")
@@ -148,13 +147,6 @@ for i, entry in enumerate ( os.scandir(args["dirpath"])):
                 #     cv2.imshow("ROI", roiOrig)
                 #     cv2.waitKey(0)
             
-        # show how long it took to loop over the image pyramid layers and
-        # sliding window locations
-        # end = time.time()
-        # print("[INFO] looping over pyramid/windows took {:.5f} seconds".format(
-        #     end - start))
-        # convert the ROIs to a NumPy array
-
         pyramid_all_files.append ( {   'imgname': entry.name  , #os.path.splitext(base)[1]
                              
                                  # 'image' : orig,  
@@ -177,24 +169,33 @@ print ("Done!")
 print("[INFO] classifying ROIs took {:.5f} seconds".format(
 end - start))
 
+#%%
 print ("Starting Prediction")
 start = time.time()
 
 # classify each of the proposal ROIs using ResNet and then show how
 # long the classifications took
-all_preds = model.predict(pyramid_queue, use_multiprocessing=True, workers = 16)
+all_preds = model.predict(pyramid_queue, use_multiprocessing=True, workers = 16, verbose = 0)
 
 end = time.time()
 print ("Done!")
 print("[INFO] classifying ROIs took {:.5f} seconds".format(
 end - start))
 
+
 #%%
-for pyramid in enumerate ( pyramid_all_files):
+start = time.time()
+raw_det_all_files = []
+print("[INFO] Re-packing data started")
+for y, pyramid_data in enumerate ( pyramid_all_files):
+
         preds=[]
-        for i in range(pyramid['len']):
-            preds.append( all_preds.pop(0))
-        locs = pyramid['locs']
+        #grebbing the prediction only related to this image
+        preds, all_preds = np.split(all_preds, [pyramid_data['len']])
+        #loading locations
+        locs = pyramid_data['locs']
+        
+        
         # decode the predictions and initialize a dictionary which maps class
         # labels (keys) to any ROIs associated with that label (values)
         # preds = imagenet_utils.decode_predictions(preds, top=1)
@@ -216,7 +217,7 @@ for pyramid in enumerate ( pyramid_all_files):
                 L.append((box, prob))
                 labels[label] = L
     
-        raw_det_all_files.append({   'imgname': pyramid['imgname']  , #os.path.splitext(base)[1]
+        raw_det_all_files.append({   'imgname': pyramid_data['imgname']  , #os.path.splitext(base)[1]
                              
                                  # 'image' : orig,  
                                  # 'prob': prob ,
@@ -226,7 +227,7 @@ for pyramid in enumerate ( pyramid_all_files):
         if ( i % 10) == 0 : print(".", end = "")
 end = time.time()
 print ("Done!")
-print("[INFO] classifying ROIs took {:.5f} seconds".format(
+print("[INFO] Re-packind dadta took {:.5f} seconds".format(
 end - start))
 #%%
 if not os.path.exists( os.path.join( args["dirpath"] , "detection") ) : os.mkdir( os.path.join( args["dirpath"] , "detection"))
@@ -236,32 +237,16 @@ for i, this_detection in enumerate(raw_det_all_files):
     clone = cv2.imread(os.path.join( args["dirpath"] , this_detection['imgname'] )) 
     labels = this_detection['labels']
     
-    #%%
+
     #select label with most boxes
     square_counts= ([len(labels[item]) for item in labels])
     max_squares =  square_counts.index(max( square_counts))
     
-    #%%
+
     # loop over the labels for each of detected objects in the image
     for label in labels.keys():
         # label = list(labels)[max_squares]
-        # # clone the original image so that we can draw on it
-        # # print("[INFO] showing results for '{}'".format(label))
-        # clone = orig.copy()
-        # # loop over all bounding boxes for the current label
-        # for (box, prob) in labels[label]:
-        #     # draw the bounding box on the image
-        #     (startX, startY, endX, endY) = box
-        #     cv2.rectangle(clone, (startX, startY), (endX, endY),
-        #         (0, 255, 0), 2)
-            
-            
-        # # show the results *before* applying non-maxima suppression, then
-        # # clone the image again so we can display the results *after*
-        # # applying non-maxima suppression
-        # # cv2.imshow("Before", clone)
-        # clone = orig.copy()
-        
+       
         # extract the bounding boxes and associated prediction
         # probabilities, then apply non-maxima suppression
         boxes = np.array([p[0] for p in labels[label]])
